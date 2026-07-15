@@ -1,0 +1,10 @@
+{
+  "name": "@sprinthub/api",
+  "private":true,
+  "version": "0.1.0",
+  "description": "SprintHub backend API",
+  "type": "module",
+  "scripts": {
+    
+  }
+}
