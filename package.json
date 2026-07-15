@@ -1,0 +1,9 @@
+{
+  "name": "sprinthub",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Modern SaaS project management platform.",
+  "type": "module",
+  "packageManager": "pnpm@11.13.0",
+  "scripts": {}
+}
