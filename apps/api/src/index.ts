@@ -1,3 +1,7 @@
 import "dotenv/config";
-import "./server.js";
 
+if (!process.env.PORT) {
+  throw new Error("PORT is not defined");
+};
+
+import "./server.js";
