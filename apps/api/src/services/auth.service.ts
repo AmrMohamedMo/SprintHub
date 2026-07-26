@@ -1,4 +1,4 @@
-import { RegisterInput,LoginInput } from "../validators/auth.validator.js";
+import { RegisterInput, LoginInput } from "../validators/auth.validator.js";
 import User from "../models/user.model.js";
 import bcrypt from "bcryptjs";
 import jwt from 'jsonwebtoken';
@@ -47,7 +47,7 @@ export const loginUser = async (data: LoginInput) => {
 
   // exist compare hashed pass
   const isPasswordValid = await bcrypt.compare(data.password, user.password);
-  
+
   // if not error
   if (!isPasswordValid) {
     throw new Error("invalid email or password");
@@ -56,11 +56,15 @@ export const loginUser = async (data: LoginInput) => {
   // exist generate token to be authorized
   // jwt.sign(payload, secret, options)
   const token = jwt.sign(
-    { userId: user._id },
+    {
+      userId: user._id,
+      email: user.email,
+      role: user.role
+    },
     env.jwtSecret,
     { expiresIn: "7d" }
   );
 
   return { token };
-  
+
 }

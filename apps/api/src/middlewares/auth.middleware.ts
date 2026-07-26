@@ -25,10 +25,10 @@ export const authentication = (
   };
 
   try {
-    // const decoded = jwt.verify(token, env.jwtSecret);
     const decoded = jwt.verify(token, env.jwtSecret) as {
       userId: string,
-      email:string
+      email: string,
+      role: string
     }
 
     req.user = decoded;
