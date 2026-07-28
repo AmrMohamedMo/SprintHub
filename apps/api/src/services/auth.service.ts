@@ -3,6 +3,13 @@ import User from "../models/user.model.js";
 import bcrypt from "bcryptjs";
 import jwt from 'jsonwebtoken';
 import { env } from '../config/env.js';
+import { ConflictError } from "../errors/ConflictError.js";
+import { UnauthorizedError } from "../errors/UnauthorizedError.js";
+import { ForbiddenError } from "../errors/ForbiddenError.js";
+
+
+
+
 export const registerUser = async (data: RegisterInput) => {
 
   // search if email is exist in DB
@@ -12,7 +19,7 @@ export const registerUser = async (data: RegisterInput) => {
 
   // exist is error
   if (existingUser) {
-    throw new Error("Email already exists");
+    throw new ConflictError("Email already exists");
   };
 
   // new email
@@ -34,25 +41,47 @@ export const registerUser = async (data: RegisterInput) => {
 
 
 export const loginUser = async (data: LoginInput) => {
-
+  
+  // Verify Email
+  //-------------
+  
   // check if email is exist
   const user = await User.findOne({
     email: data.email,
   });
-
+  
   // is not exist error
   if (!user) {
-    throw new Error("invalid email or password");
+    throw new UnauthorizedError("invalid email or password");
   };
 
-  // exist compare hashed pass
-  const isPasswordValid = await bcrypt.compare(data.password, user.password);
+  // if admin disable user
+  if (!user.isActive) {
+    throw new ForbiddenError("Account is Disabled");
+  };
 
+  
+  // Verify Password
+  //----------------
+  
+  // exist compare hashed pass
+  // const isPasswordValid = await bcrypt.compare(data.password, user.password);
+  const isPasswordValid = await user.comparePassword(data.password);
+  
   // if not error
   if (!isPasswordValid) {
-    throw new Error("invalid email or password");
+    throw new UnauthorizedError("invalid email or password");
   };
-
+  
+  // Update lastLogin
+  // ----------------
+  user.lastLogin = new Date();
+  await user.save();
+  
+  
+  
+  // Generate JWT
+  // ------------
   // exist generate token to be authorized
   // jwt.sign(payload, secret, options)
   const token = jwt.sign(
@@ -64,7 +93,9 @@ export const loginUser = async (data: LoginInput) => {
     env.jwtSecret,
     { expiresIn: "7d" }
   );
-
+  
+  // Return Token
+  // ------------
   return { token };
-
+  
 }
