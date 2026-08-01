@@ -6,6 +6,22 @@ import { env } from '../config/env.js';
 import { ConflictError } from "../errors/ConflictError.js";
 import { UnauthorizedError } from "../errors/UnauthorizedError.js";
 import { ForbiddenError } from "../errors/ForbiddenError.js";
+import { createRefreshToken } from "./refresh-token.service.js";
+
+
+/*
+Business Logic فقط
+أي حاجة خاصة بالمنطق تكون في Service.
+
+مثل:
+
+Verify Password
+Generate JWT
+Create Session
+Save Database
+Hash Password
+
+*/
 
 
 
@@ -38,18 +54,47 @@ export const registerUser = async (data: RegisterInput) => {
   return userRespone;
 
 };
+/*
+
+Login
+
+↓
+
+Verify User ✅
+
+↓
+
+Generate Access Token ✅
+
+↓
+
+Create Refresh Session ✅
+
+↓
+
+Return Response ⬅️
+*/
 
 
+/*
+Authenticate User
+↓
+
+Create Session
+↓
+
+Return Tokens
+*/
 export const loginUser = async (data: LoginInput) => {
-  
+
   // Verify Email
   //-------------
-  
+
   // check if email is exist
   const user = await User.findOne({
     email: data.email,
   });
-  
+
   // is not exist error
   if (!user) {
     throw new UnauthorizedError("invalid email or password");
@@ -60,30 +105,31 @@ export const loginUser = async (data: LoginInput) => {
     throw new ForbiddenError("Account is Disabled");
   };
 
-  
+
   // Verify Password
   //----------------
-  
+
   // exist compare hashed pass
   // const isPasswordValid = await bcrypt.compare(data.password, user.password);
   const isPasswordValid = await user.comparePassword(data.password);
-  
+
   // if not error
   if (!isPasswordValid) {
     throw new UnauthorizedError("invalid email or password");
   };
-  
+
   // Update lastLogin
   // ----------------
   user.lastLogin = new Date();
   await user.save();
-  
-  
-  
+
+
+
   // Generate JWT
   // ------------
   // exist generate token to be authorized
   // jwt.sign(payload, secret, options)
+  // Access Token 7d
   const token = jwt.sign(
     {
       userId: user._id,
@@ -93,9 +139,27 @@ export const loginUser = async (data: LoginInput) => {
     env.jwtSecret,
     { expiresIn: "7d" }
   );
-  
-  // Return Token
-  // ------------
-  return { token };
-  
+
+  // Create a new user session and get the Refresh Token for the browser.
+  // مدة طويلة 30 يوم
+  const refreshToken = await createRefreshToken(user._id);
+
+  /*
+  Access Token
+↓
+
+JSON
+
+Refresh Token
+↓
+
+HttpOnly Cookie
+  */
+  // The controller will send the Access Token in JSON
+  // and store the Refresh Token inside an HttpOnly Cookie.
+  return {
+    accessToken: token,
+    refreshToken
+  };
+
 }
