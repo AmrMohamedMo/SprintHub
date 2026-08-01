@@ -1543,3 +1543,196 @@ AppError
 وده التفكير اللي عايز أوصلك له.
 
 ---------------------------------------
+
+تحفة. دي من أهم الحاجات في Git.
+
+## 🎯 `git log --oneline -5`
+
+يعني:
+
+> **اعرض آخر 5 Commits باختصار.**
+
+---
+
+### أول سطر
+
+```text
+a958ed1 (HEAD -> develop, origin/develop)
+feat: add production error handling system
+```
+
+#### `a958ed1`
+
+ده **Commit ID**.
+
+كل Commit في Git ليه ID فريد.
+
+---
+
+#### `HEAD -> develop`
+
+يعني:
+
+```text
+HEAD
+ │
+ ▼
+develop
+```
+
+أنت واقف دلوقتي على آخر Commit في Branch `develop`.
+
+---
+
+#### `origin/develop`
+
+يعني:
+
+الـ Remote (GitHub) كمان وصل لنفس الـ Commit.
+
+بمعنى:
+
+```text
+Local develop  ✅
+Remote develop ✅
+```
+
+مفيش فرق بينهم.
+
+---
+
+### السطر الثاني
+
+```text
+ae2236e
+Merge pull request #4
+```
+
+ده Commit خاص بعملية **Merge**.
+
+يعني حصل:
+
+```text
+feature/auth-refactor
+          │
+          ▼
+      Pull Request
+          │
+          ▼
+       develop
+```
+
+---
+
+### السطر الثالث
+
+```text
+1568226
+refactor: improve auth module structure
+```
+
+ده الـ Commit اللي اتعمل على:
+
+```text
+feature/auth-refactor
+```
+
+قبل الـ Merge.
+
+---
+
+### السطر الرابع
+
+```text
+7c31349
+Merge pull request #3
+```
+
+نفس الفكرة.
+
+---
+
+### السطر الخامس
+
+```text
+f80a8a0
+feat: add authentication middleware
+```
+
+ده الـ Commit الأساسي بتاع الـ Middleware.
+
+---
+
+# الصورة كاملة
+
+```text
+f80a8a0
+feat: add authentication middleware
+          │
+          ▼
+PR #3
+          │
+          ▼
+7c31349 Merge
+          │
+          ▼
+1568226
+refactor auth
+          │
+          ▼
+PR #4
+          │
+          ▼
+ae2236e Merge
+          │
+          ▼
+a958ed1
+production error handling
+```
+
+---
+
+## 📝 أهم 3 مصطلحات تحفظهم
+
+| المصطلح     | معناه                        |
+| ----------- | ---------------------------- |
+| `HEAD`      | المكان اللي واقف عليه دلوقتي |
+| `origin`    | الريموت (GitHub)             |
+| `Commit ID` | رقم مميز لكل Commit          |
+
+---
+
+💡 **Professional Tip**
+
+قبل أي شغل جديد، اعمل:
+
+```bash
+git log --oneline -5
+```
+
+في 5 ثواني هتعرف:
+
+* آخر Features.
+* آخر Merges.
+* أنت على أي Branch.
+* هل الـ Local مطابق للـ GitHub.
+
+وده من أول الأوامر اللي أي Backend Engineer بيستخدمها يوميًا.
+
+
+
+
+
+
+
+----------------------------------
+
+
+
+
+
+
+
+
+
+
