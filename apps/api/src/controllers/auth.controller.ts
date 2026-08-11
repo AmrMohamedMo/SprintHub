@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
-import { registerUser, loginUser } from "../services/auth.service.js";
+import { registerUser, loginUser, refreshAccessToken } from "../services/auth.service.js";
+import { UnauthorizedError } from "../errors/UnauthorizedError.js";
 
 
 /*
@@ -334,6 +335,52 @@ Client Login
 8. Commit
 
 */
+
+/*
+Login
+  │
+  ▼
+Browser عنده:
+- Access Token
+- Refresh Token (Cookie)
+
+        │
+        ▼
+Access Token انتهى
+
+        │
+        ▼
+Frontend يرسل POST /refresh
+
+        │
+        ▼
+Browser يرسل Cookie تلقائياً
+
+        │
+        ▼
+Controller
+
+        │
+        ▼
+Service
+
+        │
+        ▼
+Database (Session)
+
+        │
+        ▼
+Verify Refresh Token
+
+        │
+        ▼
+Generate New Access Token
+
+        │
+        ▼
+Return Access Token
+
+*/
 export const login = async (req: Request, res: Response) => {
   const result = await loginUser(req.body);
   // Store the Refresh Token in a secure HttpOnly Cookie.
@@ -369,3 +416,97 @@ export const me = (req: Request, res: Response) => {
     user: req.user
   })
 };
+/*
+Request
+│
+├── headers
+├── body
+├── params
+├── query
+└── cookies ✅
+*/
+
+
+/*
+Client
+
+↓
+
+Middlewares
+
+↓
+
+Route
+
+↓
+
+Controller
+
+↓
+
+Service
+
+↓
+
+Database
+
+
+
+
+
+
+
+
+
+⭐ بص بقى على التشابه الجميل
+
+كل Middleware تقريبًا بيعمل:
+
+Data
+
+↓
+
+Parse / Verify
+
+↓
+
+Attach to req
+*/
+
+export const refresh = async (req: Request, res: Response) => {
+
+  // Get the Refresh Token from the HttpOnly Cookie.
+  const { refreshToken } = req.cookies;
+
+  // The client must send a Refresh Token Cookie.
+  if (!refreshToken) {
+    throw new UnauthorizedError("Refresh token is missing");
+  }
+
+  // Generate a new Access Token.
+  const accessToken = await refreshAccessToken(refreshToken);
+
+  // Return the new Access Token in JSON response.
+  res.status(200).json({
+    accessToken
+  })
+
+
+}
+/*
+Refresh Token
+    ↓
+Cookie
+    ↓
+Controller
+    ↓
+Service
+    ↓
+Verify + Session + Hash
+    ↓
+generateAccessToken()
+    ↓
+New Access Token
+    ↓
+JSON Response
+*/

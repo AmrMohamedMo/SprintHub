@@ -1,4 +1,6 @@
+
 /*
+
 1. Generate Refresh Token
         ↓
 2. Hash Refresh Token
@@ -52,9 +54,10 @@ Generate Tokens
 
 import bcrypt from "bcryptjs";
 import { Types } from "mongoose";
-import crypto from "node:crypto";
+// import crypto from "node:crypto";
 import RefreshToken from "../models/refresh-token.model.js";
-
+import jwt from "jsonwebtoken";
+import { env } from "../config/env.js";
 
 /*
 1. Generate Refresh Token ✅
@@ -69,57 +72,173 @@ import RefreshToken from "../models/refresh-token.model.js";
 
 
 // Create New Session
+// Session Management
+/*
+Create Session ✅
+Find Session
+Verify Session
+Revoke Session
+Delete Session
+*/
+// export const createRefreshToken = async (userId: Types.ObjectId) => {
 
-export const createRefreshToken = async (userId: Types.ObjectId) => {
+//   /*
+//   الإجابة:
 
-  /*
-  الإجابة:
-  
-  مفتاح جديد
-  
-  يعني أول حاجة نعملها:
-  
-  Generate Secret Key
-  */
-  const refreshToken = crypto.randomBytes(64).toString("hex");
+//   مفتاح جديد
+
+//   يعني أول حاجة نعملها:
+
+//   Generate Secret Key
+//   */
+//   const refreshToken = crypto.randomBytes(64).toString("hex");
 
 
-  /*
-  هل ينفع أخزن المفتاح الحقيقي؟
+//   /*
+//   هل ينفع أخزن المفتاح الحقيقي؟
 
-❌ لا
+// ❌ لا
 
-ليه؟
+// ليه؟
 
-لو حد دخل Database.
+// لو حد دخل Database.
 
-هيلاقي:
+// هيلاقي:
 
-Refresh Token
+// Refresh Token
 
-ويقدر يستخدمها.
+// ويقدر يستخدمها.
 
-فنقول:
+// فنقول:
 
-Original
-↓
+// Original
+// ↓
 
-Hash
+// Hash
 
-زي Password بالظبط.
-  */
-  const tokenHash = await bcrypt.hash(refreshToken, 10);
+// زي Password بالظبط.
+//   */
+//   const tokenHash = await bcrypt.hash(refreshToken, 10);
 
-  // الـ Function دي وظيفتها الوحيدة: إنشاء Session جديدة، تخزينها بأمان، وإرجاع مفتاح الجلسة للمتصفح.
-  await RefreshToken.create({
-    // Owner
+//   // الـ Function دي وظيفتها الوحيدة: إنشاء Session جديدة، تخزينها بأمان، وإرجاع مفتاح الجلسة للمتصفح.
+//   await RefreshToken.create({
+//     // Owner
+//     user: userId,
+//     // Hash
+//     tokenHash,
+//     // Expiration
+//     expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+//   });
+
+
+//   return refreshToken;
+// }
+
+
+
+// export const verifyRefreshToken = async (refreshToken: string) => {
+//   // Find the Refresh Token in the Database.
+//   /*
+//       معلومة مهمة قبل ما نبدأ الـ Logic
+
+//     أنا متعمد أقسمها كده لأن وظيفة verifyRefreshToken() مش إنها ترجع true أو false.
+
+//     وظيفتها إنها ترجع الـ User المرتبط بالـ Session.
+
+//     وليه؟ لأن بعد التحقق، هنحتاج الـ User عشان نعمل:
+//   */
+
+// }
+
+
+
+
+
+
+// create a new user session
+
+
+
+
+/*
+MongoDB
+   ↓
+Server
+   ↓
+JWT
+   ↓
+Browser
+
+*/
+export const createSession = async (userId: Types.ObjectId) => {
+
+  // Generate a new refresh token
+  const session = await RefreshToken.create({
     user: userId,
-    // Hash
-    tokenHash,
-    // Expiration
     expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
   });
-
-
-  return refreshToken;
+  return session;
 }
+
+
+// Generate a Refresh JWT that contains the session id.
+export const generateRefreshToken = (userId: Types.ObjectId, sessionId: Types.ObjectId) => {
+  return jwt.sign(
+    {
+      sub: userId,
+      sid: sessionId
+    },
+    env.jwtSecret,
+    {
+      expiresIn: "30d"
+    }
+  )
+}
+
+
+
+// save the hashed refresh token in the session
+export const saveRefreshTokenHash = async (
+  sessionId: Types.ObjectId, refreshToken: string) => {
+
+  const tokenHash = await bcrypt.hash(refreshToken, 10);
+
+  await RefreshToken.findByIdAndUpdate(
+    sessionId,
+    {
+      tokenHash
+    }
+  );
+};
+
+// نقارن الـ Refresh Token الحقيقي اللي جاي من الـ Browser بالـ Hash المخزن في الـ Session.
+/*
+ليه؟
+
+لأن bcrypt.hash() مش بنقدر نفكّه؛ لذلك بنستخدم bcrypt.compare().
+*/
+
+// verify that the provided refresh token matches the stored hash
+export const verifyRefreshTokenHash = async (
+  sessionId: Types.ObjectId,
+  refreshToken: string
+) => {
+
+  // load the session containing the stored refresh token hash
+  const session = await RefreshToken.findById(sessionId);
+
+  if (!session) {
+    return false;
+  }
+
+  // compare the provided refresh token with the stored hash
+  return await bcrypt.compare(refreshToken, session.tokenHash);
+
+
+}
+
+
+
+
+
+

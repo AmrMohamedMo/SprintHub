@@ -7,13 +7,14 @@ import router from './routes/index.js';
 import { notFound } from "./middlewares/not-found.middleware.js";
 import { errorHandler } from "./middlewares/error.middleware.js";
 // import authRouter from './routes/auth.route.js';
+import cookieParser from "cookie-parser";
 const app = express();
 
 app.use(cors());
 app.use(helmet());
 app.use(morgan("dev"));
 app.use(express.json());
-
+app.use(cookieParser())
 
 // app.use("/health", healthRouter);
 // app.use("/auth", authRouter);

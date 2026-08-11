@@ -1730,6 +1730,343 @@ git log --oneline -5
 
 
 
+يلا بينا. 😎
+
+---
+
+# 🚀 Feature: Refresh Access Token
+
+## 🎯 الهدف
+
+لما الـ Access Token ينتهي...
+
+المستخدم **ميعملش Login تاني**.
+
+هيطلب Access Token جديد باستخدام الـ Refresh Token.
+
+---
+
+# 🧠 الـ Workflow بالكامل
+
+```text
+Login
+  │
+  ▼
+Browser عنده:
+- Access Token
+- Refresh Token (Cookie)
+
+        │
+        ▼
+Access Token انتهى
+
+        │
+        ▼
+Frontend يرسل POST /refresh
+
+        │
+        ▼
+Browser يرسل Cookie تلقائياً
+
+        │
+        ▼
+Controller
+
+        │
+        ▼
+Service
+
+        │
+        ▼
+Database (Session)
+
+        │
+        ▼
+Verify Refresh Token
+
+        │
+        ▼
+Generate New Access Token
+
+        │
+        ▼
+Return Access Token
+```
+
+---
+
+# 🎯 هنقسمها
+
+```text
+1. Read Cookie
+2. Verify Session
+3. Generate Access Token
+4. Return Response
+```
+
+---
+
+# النهارده هنعمل Step 1 فقط
+
+## الهدف
+
+نقرأ الـ Refresh Token اللي المتصفح بعتـه.
+
+---
+
+# السؤال
+
+إحنا هنقرأها منين؟
+
+زى ما كنا بنقرأ الـ JWT من:
+
+```ts
+req.headers.authorization
+```
+
+الـ Cookie لها مكان مختلف.
+
+---
+
+# API
+
+قبل ما نستخدمها لازم نعرفها.
+
+```ts
+req.cookies
+```
+
+**يعني:**
+
+```text
+Request
+│
+├── headers
+├── body
+├── params
+├── query
+└── cookies ✅
+```
+
+> `cookies` عبارة عن Object فيه كل الـ Cookies اللي المتصفح بعتها.
+
+---
+
+# مثال
+
+لو المتصفح بعت:
+
+```text
+refreshToken = abc123
+theme = dark
+```
+
+هيبقى عندك:
+
+```ts
+req.cookies = {
+  refreshToken: "abc123",
+  theme: "dark"
+}
+```
+
+---
+
+# ❗ لكن
+
+Express **مش بيفهم Cookies لوحده.**
+
+لازم Middleware اسمه:
+
+```text
+cookie-parser
+```
+
+---
+
+## السؤال قبل الكود
+
+هل أنت منزل:
+
+```bash
+npm install cookie-parser
+```
+
+ولا لسه؟
+
+**جاوبني بـ:**
+
+* ✅ منزل
+* ❌ لسه
+
+عشان دي أول خطوة قبل ما نكتب أي سطر كود.
+
+
+
+
+
+
+
+
+بالضبط. ✅
+
+لكن خليني أصححها بدقة علشان تبقى إجابتك في الإنترفيو صحيحة.
+
+---
+
+# الإجابة المختصرة
+
+```ts
+app.use(express.json());
+```
+
+> **تحول JSON القادم في Request Body إلى JavaScript Object وتحطه في `req.body`.**
+
+---
+
+# الـ Workflow
+
+```text
+Client
+
+↓
+
+JSON
+
+↓
+
+express.json()
+
+↓
+
+JavaScript Object
+
+↓
+
+req.body
+```
+
+---
+
+# مثال
+
+الـ Client بعت:
+
+```json
+{
+  "email": "amr@test.com",
+  "password": "123456"
+}
+```
+
+بعد الـ Middleware:
+
+```ts
+req.body
+```
+
+هيبقى:
+
+```ts
+{
+  email: "amr@test.com",
+  password: "123456"
+}
+```
+
+فتقدر تعمل:
+
+```ts
+req.body.email
+```
+
+---
+
+# نفس الفكرة مع `cookie-parser`
+
+```text
+Cookie Header
+
+↓
+
+cookieParser()
+
+↓
+
+JavaScript Object
+
+↓
+
+req.cookies
+```
+
+---
+
+# ومع الـ Authentication Middleware اللي عملناه
+
+```text
+JWT
+
+↓
+
+jwt.verify()
+
+↓
+
+JavaScript Object
+
+↓
+
+req.user
+```
+
+---
+
+## ⭐ بص بقى على التشابه الجميل
+
+كل Middleware تقريبًا بيعمل:
+
+```text
+Data
+
+↓
+
+Parse / Verify
+
+↓
+
+Attach to req
+```
+
+أمثلة:
+
+```text
+JSON
+        ↓
+express.json()
+        ↓
+req.body
+```
+
+```text
+Cookie
+        ↓
+cookieParser()
+        ↓
+req.cookies
+```
+
+```text
+JWT
+        ↓
+authentication
+        ↓
+req.user
+```
+
+---
+
+🔥 **دي أول Pattern في Express عايزك تحفظه**، لأنك هتشوفه في أي مشروع Backend محترف. ودي بالضبط نوعية الـ Patterns اللي بتبني الـ Architecture في دماغك، مش مجرد حفظ Functions.
 
 
 
